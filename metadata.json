@@ -1,0 +1,6 @@
+{
+  "name": "Sunshine Edit",
+  "description": "सिनेमैटिक AI वीडियो एडिटर — 1-क्लिक AI मैजिक, कलर ग्रेडिंग, स्मार्ट कट और एडवांस्ड टाइमलाइन के साथ मोबाइल वीडियो एडिटिंग स्टूडियो।",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
