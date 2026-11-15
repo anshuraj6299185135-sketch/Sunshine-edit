@@ -1,0 +1,9 @@
+[build]
+  publish = "web"
+  command = "echo 'Static site, no build needed'"
+
+# Har link par website khule, kabhi "Page not found" na aaye
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
