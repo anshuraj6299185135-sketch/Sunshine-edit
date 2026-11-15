@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sunshine Edit — सिनेमैटिक वीडियो एडिटर</title>
+<meta name="description" content="Sunshine Edit — मोबाइल और ब्राउज़र में सिनेमैटिक वीडियो एडिटिंग: कलर ग्रेडिंग, ट्रिम, स्पीड और 1-क्लिक मैजिक लुक्स।" />
+<meta name="theme-color" content="#0d0a08" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='26' fill='%23ffb02e'/></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Hind:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0d0a08; --panel:#17120e; --line:#2a211a; --text:#f6ede3; --muted:#a8998a;
+    --sun:#ffb02e; --ember:#ff6a3d; --radius:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:Hind,system-ui,sans-serif;line-height:1.5;min-height:100vh;
+    background-image:radial-gradient(900px 500px at 85% -10%,rgba(255,140,40,.18),transparent 60%),radial-gradient(700px 400px at -10% 110%,rgba(255,90,60,.10),transparent 60%)}
+  header{display:flex;align-items:center;justify-content:space-between;padding:18px clamp(16px,4vw,48px);border-bottom:1px solid var(--line)}
+  .logo{display:flex;align-items:center;gap:10px;font-family:Fraunces,serif;font-weight:800;font-size:1.35rem;letter-spacing:-.02em}
+  .logo i{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe08a,var(--sun) 55%,var(--ember));box-shadow:0 0 24px rgba(255,176,46,.6)}
+  .hero{padding:48px clamp(16px,4vw,48px) 24px;max-width:1200px;margin:auto}
+  h1{font-family:Fraunces,serif;font-size:clamp(2.1rem,5.5vw,4rem);line-height:1.05;letter-spacing:-.03em;max-width:14ch}
+  h1 em{font-style:normal;background:linear-gradient(90deg,var(--sun),var(--ember));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p{color:var(--muted);font-size:1.1rem;margin-top:14px;max-width:52ch}
+  main{max-width:1200px;margin:auto;padding:16px clamp(16px,4vw,48px) 60px;display:grid;grid-template-columns:1fr 340px;gap:20px}
+  @media(max-width:900px){main{grid-template-columns:1fr}}
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column}
+  .screen{position:relative;aspect-ratio:16/9;background:#000;display:grid;place-items:center}
+  .screen video{width:100%;height:100%;object-fit:contain;display:none}
+  .screen.has video{display:block}
+  .vignette{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .3s;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.75))}
+  .bars{position:absolute;inset:0;pointer-events:none;display:none}
+  .bars::before,.bars::after{content:"";position:absolute;left:0;right:0;height:11%;background:#000}
+  .bars::before{top:0}.bars::after{bottom:0}
+  .drop{text-align:center;padding:24px;cursor:pointer}
+  .drop b{display:block;font-family:Fraunces,serif;font-size:1.4rem;margin:10px 0 4px}
+  .drop span{color:var(--muted)}
+  .screen.has .drop{display:none}
+  .screen.drag{outline:2px dashed var(--sun);outline-offset:-10px}
+  .controls{padding:14px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;border-top:1px solid var(--line)}
+  .time{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.95rem;margin-left:auto}
+  button,.btn{font:inherit;font-weight:600;border:1px solid var(--line);background:#211912;color:var(--text);padding:9px 16px;border-radius:999px;cursor:pointer;transition:.15s}
+  button:hover{border-color:var(--sun)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  .primary{background:linear-gradient(90deg,var(--sun),var(--ember));color:#1a0e05;border:none}
+  .timeline{padding:4px 16px 18px}
+  .track{position:relative;height:46px;border-radius:10px;background:repeating-linear-gradient(90deg,#241b14 0 22px,#1d1610 22px 44px);overflow:hidden;cursor:pointer}
+  .sel{position:absolute;top:0;bottom:0;background:rgba(255,176,46,.18);border-left:3px solid var(--sun);border-right:3px solid var(--sun)}
+  .head{position:absolute;top:0;bottom:0;width:2px;background:#fff;box-shadow:0 0 8px #fff}
+  .trimrow{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;color:var(--muted);font-size:.9rem;align-items:center}
+  aside{display:flex;flex-direction:column;gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+  .card h3{font-family:Fraunces,serif;font-size:1.05rem;margin-bottom:12px}
+  .looks{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .look{padding:10px 4px;border-radius:12px;font-size:.85rem;text-align:center}
+  .look.on{border-color:var(--sun);background:#2c1f12;color:var(--sun)}
+  .look::before{content:"";display:block;height:28px;border-radius:8px;margin-bottom:6px;background:var(--sw)}
+  label.s{display:block;font-size:.9rem;color:var(--muted);margin-bottom:10px}
+  label.s div{display:flex;justify-content:space-between}
+  input[type=range]{width:100%;accent-color:var(--sun)}
+  input[type=number]{width:80px;font:inherit;background:#211912;border:1px solid var(--line);color:var(--text);border-radius:8px;padding:4px 8px}
+  .toggles{display:flex;gap:8px;flex-wrap:wrap}
+  .toggles button.on{border-color:var(--sun);color:var(--sun)}
+  .status{font-size:.9rem;color:var(--sun);min-height:1.4em;padding:0 16px 14px}
+  footer{text-align:center;color:var(--muted);font-size:.85rem;padding:24px;border-top:1px solid var(--line)}
+  input[type=file]{display:none}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><i></i>Sunshine Edit</div>
+  <label class="btn primary" for="file">वीडियो चुनें</label>
+</header>
+
+<section class="hero">
+  <h1>हर क्लिप को बनाएं <em>सिनेमैटिक</em></h1>
+  <p>1-क्लिक मैजिक लुक्स, कलर ग्रेडिंग, ट्रिम और स्पीड — सब सीधे आपके ब्राउज़र में। कुछ भी इंस्टॉल नहीं करना, वीडियो आपके डिवाइस से बाहर नहीं जाता।</p>
+</section>
+
+<main>
+  <section class="stage">
+    <div class="screen" id="screen">
+      <video id="video" playsinline preload="metadata"></video>
+      <div class="vignette" id="vig"></div>
+      <div class="bars" id="bars"></div>
+      <label class="drop" for="file">
+        <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#ffb02e" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4-2.5z" fill="#ffb02e"/></svg>
+        <b>वीडियो यहाँ डालें</b>
+        <span>टैप करें या फ़ाइल खींचकर छोड़ें (MP4, MOV, WebM)</span>
+      </label>
+    </div>
+    <div class="controls">
+      <button id="play" disabled>▶ चलाएं</button>
+      <button id="magic" disabled>✨ 1-क्लिक मैजिक</button>
+      <button id="reset" disabled>रीसेट</button>
+      <span class="time" id="time">0:00 / 0:00</span>
+    </div>
+    <div class="timeline">
+      <div class="track" id="track"><div class="sel" id="sel"></div><div class="head" id="head"></div></div>
+      <div class="trimrow">
+        <span>शुरुआत (सेकंड)</span><input type="number" id="tStart" min="0" step="0.1" value="0" />
+        <span>अंत (सेकंड)</span><input type="number" id="tEnd" min="0" step="0.1" value="0" />
+        <button id="setIn" disabled>यहाँ से शुरू</button>
+        <button id="setOut" disabled>यहाँ तक</button>
+      </div>
+    </div>
+    <div class="status" id="status"></div>
+    <div class="controls" style="border-top:none;padding-top:0">
+      <button class="primary" id="export" disabled>⬇ वीडियो एक्सपोर्ट करें</button>
+    </div>
+  </section>
+
+  <aside>
+    <div class="card">
+      <h3>मैजिक लुक्स</h3>
+      <div class="looks" id="looks"></div>
+    </div>
+    <div class="card">
+      <h3>कलर ग्रेडिंग</h3>
+      <div id="sliders"></div>
+    </div>
+    <div class="card">
+      <h3>सिनेमा इफ़ेक्ट्स</h3>
+      <div class="toggles">
+        <button id="tVig">विग्नेट</button>
+        <button id="tBars">सिनेमा बार्स</button>
+      </div>
+      <label class="s" style="margin-top:14px"><div><span>स्पीड</span><span id="spdV">1×</span></div>
+        <input type="range" id="speed" min="0.25" max="2" step="0.25" value="1" /></label>
+    </div>
+  </aside>
+</main>
+
+<footer>© Sunshine Edit · सिनेमैटिक वीडियो एडिटर</footer>
+<input type="file" id="file" accept="video/*" />
+
+<script>
+const $ = id => document.getElementById(id);
+const v = $('video'), screen = $('screen');
+const SL = [
+  ['brightness','ब्राइटनेस',50,150,100,'%'],
+  ['contrast','कॉन्ट्रास्ट',50,180,100,'%'],
+  ['saturate','सैचुरेशन',0,200,100,'%'],
+  ['sepia','वार्मथ',0,80,0,'%'],
+  ['hue','ह्यू',-60,60,0,'°'],
+  ['blur','सॉफ़्टनेस',0,4,0,'px'],
+];
+const LOOKS = {
+  'ओरिजिनल':{sw:'#555',f:{}},
+  'सिनेमैटिक':{sw:'linear-gradient(135deg,#1f4d5a,#e08a3c)',f:{contrast:125,saturate:85,sepia:18,brightness:95},vig:1,bars:1},
+  'गोल्डन':{sw:'linear-gradient(135deg,#ffb02e,#c2531f)',f:{sepia:40,saturate:130,brightness:105,contrast:110}},
+  'कूल ब्लू':{sw:'linear-gradient(135deg,#2a6fdb,#9ad0ff)',f:{hue:-20,saturate:110,contrast:110,brightness:100}},
+  'विंटेज':{sw:'linear-gradient(135deg,#8a6d4a,#d8c3a0)',f:{sepia:65,contrast:90,saturate:70,brightness:105},vig:1},
+  'नोयर':{sw:'linear-gradient(135deg,#000,#ddd)',f:{saturate:0,contrast:150,brightness:95},vig:1},
+};
+const st = {f:{}, vig:false, bars:false, look:'ओरिजिनल', start:0, end:0};
+SL.forEach(([k,,,,d])=>st.f[k]=d);
+
+// sliders
+$('sliders').innerHTML = SL.map(([k,n,mi,ma,d,u])=>
+  `<label class="s"><div><span>${n}</span><span id="${k}V">${d}${u}</span></div>
+   <input type="range" id="${k}" min="${mi}" max="${ma}" step="${k==='blur'?0.1:1}" value="${d}"></label>`).join('');
+SL.forEach(([k,,,,,u])=>$(k).addEventListener('input',e=>{st.f[k]=+e.target.value;apply()}));
+
+// looks
+$('looks').innerHTML = Object.entries(LOOKS).map(([n,l])=>`<button class="look" data-n="${n}" style="--sw:${l.sw}">${n}</button>`).join('');
+$('looks').addEventListener('click',e=>{const b=e.target.closest('.look'); if(b) setLook(b.dataset.n)});
+function setLook(n){
+  const l = LOOKS[n]; st.look = n;
+  SL.forEach(([k,,,,d])=>st.f[k] = l.f[k] ?? d);
+  st.vig = !!l.vig; st.bars = !!l.bars; apply();
+}
+function filterStr(){
+  const f = st.f;
+  return `brightness(${f.brightness}%) contrast(${f.contrast}%) saturate(${f.saturate}%) sepia(${f.sepia}%) hue-rotate(${f.hue}deg) blur(${f.blur}px)`;
+}
+function apply(){
+  v.style.filter = filterStr();
+  SL.forEach(([k,,,,,u])=>{$(k).value=st.f[k];$(k+'V').textContent=st.f[k]+u});
+  $('vig').style.opacity = st.vig?1:0; $('tVig').classList.toggle('on',st.vig);
+  $('bars').style.display = st.bars?'block':'none'; $('tBars').classList.toggle('on',st.bars);
+  document.querySelectorAll('.look').forEach(b=>b.classList.toggle('on',b.dataset.n===st.look));
+}
+$('tVig').onclick=()=>{st.vig=!st.vig;apply()};
+$('tBars').onclick=()=>{st.bars=!st.bars;apply()};
+$('speed').oninput=e=>{v.playbackRate=+e.target.value;$('spdV').textContent=e.target.value+'×'};
+
+// file loading
+let url;
+function load(file){
+  if(!file || !file.type.startsWith('video/')) return msg('कृपया एक वीडियो फ़ाइल चुनें।');
+  if(url) URL.revokeObjectURL(url);
+  url = URL.createObjectURL(file); v.src = url; screen.classList.add('has'); msg('');
+}
+$('file').onchange = e=>load(e.target.files[0]);
+['dragover','dragenter'].forEach(t=>screen.addEventListener(t,e=>{e.preventDefault();screen.classList.add('drag')}));
+['dragleave','drop'].forEach(t=>screen.addEventListener(t,()=>screen.classList.remove('drag')));
+screen.addEventListener('drop',e=>{e.preventDefault();load(e.dataTransfer.files[0])});
+
+v.onloadedmetadata = ()=>{
+  st.start=0; st.end=+v.duration.toFixed(1); syncTrim();
+  document.querySelectorAll('button').forEach(b=>b.disabled=false);
+  v.playbackRate = +$('speed').value; tick();
+};
+const fmt = s=>{s=Math.max(0,s||0);return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0')};
+function tick(){
+  const d=v.duration||1;
+  $('time').textContent = fmt(v.currentTime)+' / '+fmt(v.duration);
+  $('head').style.left = (v.currentTime/d*100)+'%';
+  if(!recording && !v.paused && v.currentTime>=st.end){v.pause(); v.currentTime=st.start}
+}
+v.ontimeupdate = tick;
+v.onplay = ()=>$('play').textContent='⏸ रोकें';
+v.onpause = ()=>$('play').textContent='▶ चलाएं';
+$('play').onclick=()=>{ if(v.paused){ if(v.currentTime<st.start||v.currentTime>=st.end) v.currentTime=st.start; v.play() } else v.pause() };
+function syncTrim(){
+  const d=v.duration||1;
+  $('tStart').value=st.start; $('tEnd').value=st.end;
+  $('sel').style.left=(st.start/d*100)+'%'; $('sel').style.width=((st.end-st.start)/d*100)+'%';
+}
+$('tStart').onchange=e=>{st.start=Math.min(Math.max(0,+e.target.value),st.end-0.1);syncTrim()};
+$('tEnd').onchange=e=>{st.end=Math.max(Math.min(v.duration,+e.target.value),st.start+0.1);syncTrim()};
+$('setIn').onclick=()=>{st.start=Math.min(+v.currentTime.toFixed(1),st.end-0.1);syncTrim()};
+$('setOut').onclick=()=>{st.end=Math.max(+v.currentTime.toFixed(1),st.start+0.1);syncTrim()};
+$('track').onclick=e=>{const r=e.currentTarget.getBoundingClientRect(); v.currentTime=(e.clientX-r.left)/r.width*v.duration};
+
+$('magic').onclick=()=>{setLook('सिनेमैटिक'); st.f.saturate=95; st.f.brightness=100; apply(); msg('✨ सिनेमैटिक मैजिक लागू हो गया!')};
+$('reset').onclick=()=>{setLook('ओरिजिनल'); st.start=0; st.end=+v.duration.toFixed(1); syncTrim(); $('speed').value=1; $('speed').oninput({target:$('speed')})};
+function msg(t){$('status').textContent=t}
+
+// export: draw filtered frames to canvas and record
+let recording=false;
+$('export').onclick = async ()=>{
+  if(recording) return;
+  if(!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) return msg('आपका ब्राउज़र एक्सपोर्ट सपोर्ट नहीं करता। Chrome आज़माएं।');
+  const c=document.createElement('canvas'); c.width=v.videoWidth; c.height=v.videoHeight;
+  const ctx=c.getContext('2d');
+  const stream=c.captureStream(30);
+  try{ const as=(v.captureStream||v.mozCaptureStream).call(v); as.getAudioTracks().forEach(t=>stream.addTrack(t)) }catch(e){}
+  const type=['video/mp4','video/webm;codecs=vp9','video/webm'].find(t=>MediaRecorder.isTypeSupported(t))||'';
+  const rec=new MediaRecorder(stream,type?{mimeType:type}:{});
+  const chunks=[]; rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+  rec.onstop=()=>{
+    const blob=new Blob(chunks,{type:rec.mimeType}); const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob); a.download='sunshine-edit.'+(rec.mimeType.includes('mp4')?'mp4':'webm'); a.click();
+    recording=false; $('export').disabled=false; msg('✅ वीडियो डाउनलोड हो गया!');
+  };
+  recording=true; $('export').disabled=true; msg('⏳ एक्सपोर्ट हो रहा है… कृपया टैब खुला रखें।');
+  v.currentTime=st.start; await new Promise(r=>v.addEventListener('seeked',r,{once:true}));
+  rec.start(); await v.play();
+  const draw=()=>{
+    if(v.currentTime>=st.end || v.ended){ v.pause(); rec.stop(); return }
+    ctx.filter=filterStr(); ctx.drawImage(v,0,0,c.width,c.height); ctx.filter='none';
+    if(st.vig){const g=ctx.createRadialGradient(c.width/2,c.height/2,c.height*.35,c.width/2,c.height/2,c.width*.65);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.75)');ctx.fillStyle=g;ctx.fillRect(0,0,c.width,c.height)}
+    if(st.bars){ctx.fillStyle='#000';const h=c.height*.11;ctx.fillRect(0,0,c.width,h);ctx.fillRect(0,c.height-h,c.width,h)}
+    msg('⏳ एक्सपोर्ट: '+Math.round((v.currentTime-st.start)/(st.end-st.start)*100)+'%');
+    requestAnimationFrame(draw);
+  };
+  draw();
+};
+apply();
+</script>
+</body>
+</html>
